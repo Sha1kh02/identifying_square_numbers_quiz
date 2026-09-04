@@ -1,0 +1,14 @@
+# Recorded quiz attempts are runtime data, not source code.
+quiz_results.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
