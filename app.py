@@ -1,11 +1,11 @@
-"""Streamlit interface for the numeracy training quiz.
+"""Streamlit interface for the quiz.
 
 This module is the presentation layer only. It reads input, calls into
-``quiz_logic`` for every decision and ``storage`` for every read or write, and
-renders whatever comes back. Keeping it thin is what allows the rest of the
+quiz_logic.py for every decision and storage.py for every read or write, and
+renders whatever comes back. Keeping it minimalistic is what allows the rest of the
 project to be tested without launching a browser.
 
-Run locally with::
+command to Run locally with:
 
     streamlit run app.py
 """
@@ -94,25 +94,36 @@ def render_setup() -> None:
 def render_question() -> None:
     """Draw the current question, handle the answer, and show feedback."""
     session: QuizSession = st.session_state.session
-    st.progress(session.answered / session.total)
-    st.caption(f"Question {session.answered + 1} of {session.total}")
-
-    question = session.current_question()
-    st.subheader(question.prompt)
-
     feedback = st.session_state.get("feedback")
+
     if feedback:
-        # Feedback belongs to the question just answered, so show it and wait
-        # for the participant to move on rather than jumping straight ahead.
+        # Feedback belongs to the question just answered. Submitting has
+        # already advanced the session, so the prompt and position are taken
+        # from the stored feedback rather than from the session, which would
+        # otherwise show the next question's heading above the last one's
+        # explanation.
+        position = int(feedback["position"])
+        st.progress(position / session.total)
+        st.caption(f"Question {position} of {session.total}")
+        st.subheader(feedback["prompt"])
+
         if feedback["correct"]:
             st.success("Correct.")
         else:
             st.error(f"Not quite. The answer is {feedback['answer']}.")
         st.info(feedback["explanation"])
-        if st.button("Next question", type="primary"):
+
+        label = "See results" if position >= session.total else "Next question"
+        if st.button(label, type="primary"):
             st.session_state.feedback = None
             st.rerun()
         return
+
+    st.progress(session.answered / session.total)
+    st.caption(f"Question {session.answered + 1} of {session.total}")
+
+    question = session.current_question()
+    st.subheader(question.prompt)
 
     if question.options:
         response = st.radio("Choose an answer", question.options, index=None)
@@ -132,6 +143,8 @@ def render_question() -> None:
             "correct": was_correct,
             "answer": question.correct_answer,
             "explanation": question.explanation,
+            "prompt": question.prompt,
+            "position": session.answered,
         }
         st.rerun()
 
@@ -210,9 +223,11 @@ def main() -> None:
         session = st.session_state.get("session")
         if session is None:
             render_setup()
-        elif session.is_complete:
+        elif session.is_complete and not st.session_state.get("feedback"):
             render_results()
         else:
+            # Feedback for the final question is still pending, so the question
+            # view stays up until the participant moves on.
             render_question()
 
     with results_tab:
