@@ -1,11 +1,9 @@
 """Unit tests for the quiz logic and the CSV results store.
 
-The tests cover the following:
- -the pure helper functions.
- -the behaviour of the generator and session classes.
- -the storage layer's handling of missing ordamaged files.
-  
- Streamlit is never imported, so the whole suite runs in a headless CI job in under a second.
+The tests cover three things: the pure helper functions, the behaviour of the
+generator and session classes, and the storage layer's handling of missing or
+damaged files. Streamlit is never imported, so the whole suite runs in a
+headless CI job in under a second.
 """
 
 from __future__ import annotations
@@ -187,7 +185,7 @@ def test_existing_empty_file_still_gets_headers(tmp_path) -> None:
     """An empty file left by an editor must not be mistaken for a ready one.
 
     Regression test: ensure_file originally checked only whether the path
-    existed, so a empty CSV skipped the header write and the first saved
+    existed, so a zero-byte CSV skipped the header write and the first saved
     attempt was consumed as the header row on read.
     """
     path = tmp_path / "results.csv"
@@ -259,3 +257,22 @@ def test_unwritable_path_raises_storage_error(tmp_path) -> None:
     store = ResultsStore(blocker / "results.csv")
     with pytest.raises(StorageError):
         store.ensure_file()
+
+
+def test_best_score_for_returns_the_highest_previous_score(tmp_path) -> None:
+    store = ResultsStore(tmp_path / "results.csv")
+    store.save({"participant": "Alex", "score_percent": 50.0})
+    store.save({"participant": "Alex", "score_percent": 75.0})
+    store.save({"participant": "Sam", "score_percent": 90.0})
+    assert store.best_score_for("Alex") == 75.0
+
+
+def test_best_score_for_unknown_participant_is_none(tmp_path) -> None:
+    store = ResultsStore(tmp_path / "results.csv")
+    assert store.best_score_for("Nobody") is None
+
+
+def test_best_score_for_ignores_case_and_padding(tmp_path) -> None:
+    store = ResultsStore(tmp_path / "results.csv")
+    store.save({"participant": "Alex", "score_percent": 60.0})
+    assert store.best_score_for("  alex ") == 60.0

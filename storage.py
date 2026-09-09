@@ -128,6 +128,40 @@ class ResultsStore:
             writer.writerow({name: row.get(name, "") for name in FIELDNAMES})
         return buffer.getvalue()
 
+    def best_score_for(self, participant: str) -> float | None:
+        """Return the highest score this participant has previously recorded.
+
+        Matching ignores capitalisation and surrounding whitespace, so a person
+        who types their name slightly differently still sees their own history.
+
+        Args:
+            participant: The name to look up.
+
+        Returns:
+            The highest ``score_percent`` for that name, or ``None`` if the
+            participant has no recorded attempts.
+
+        Examples:
+            >>> store.best_score_for("  alex ")   # doctest: +SKIP
+            75.0
+        """
+        wanted = " ".join(str(participant).strip().lower().split())
+        if not wanted:
+            return None
+
+        scores: list[float] = []
+        for row in self.load():
+            name = " ".join(str(row.get("participant", "")).strip().lower().split())
+            if name != wanted:
+                continue
+            try:
+                scores.append(float(row["score_percent"]))
+            except (KeyError, TypeError, ValueError):
+                # A row with a missing or malformed score is skipped rather
+                # than taking the whole lookup down.
+                continue
+        return max(scores) if scores else None
+
     def summary(self) -> dict[str, object]:
         """Aggregate the stored attempts for the dashboard.
 

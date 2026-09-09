@@ -1,11 +1,11 @@
-"""Streamlit interface for the quiz.
+"""Streamlit interface for the numeracy training quiz.
 
 This module is the presentation layer only. It reads input, calls into
-quiz_logic.py for every decision and storage.py for every read or write, and
-renders whatever comes back. Keeping it minimalistic is what allows the rest of the
+``quiz_logic`` for every decision and ``storage`` for every read or write, and
+renders whatever comes back. Keeping it thin is what allows the rest of the
 project to be tested without launching a browser.
 
-command to Run locally with:
+Run locally with::
 
     streamlit run app.py
 """
@@ -39,7 +39,7 @@ def get_store() -> ResultsStore:
 
 def reset_session() -> None:
     """Clear the active quiz so the setup screen is shown again."""
-    for key in ("session", "feedback", "saved"):
+    for key in ("session", "feedback", "saved", "previous_best"):
         st.session_state.pop(key, None)
 
 
@@ -75,6 +75,16 @@ def render_setup() -> None:
     )
 
     name = st.text_input("Your name", placeholder="e.g. Alex Morgan")
+    if name.strip():
+        # A returning participant sees what they have to beat. First-timers see
+        # nothing, so the setup screen stays uncluttered for new users.
+        try:
+            best = get_store().best_score_for(name)
+        except StorageError:
+            best = None
+        if best is not None:
+            st.caption(f"Your best so far: {best}%")
+
     difficulty = st.select_slider(
         "Difficulty",
         options=list(DIFFICULTY_LIMITS),
@@ -168,10 +178,21 @@ def render_results() -> None:
 
     if not st.session_state.get("saved"):
         try:
+            # Read the old best before saving, or this attempt would count as
+            # the previous best and nothing would ever look like an improvement.
+            st.session_state.previous_best = get_store().best_score_for(session.participant)
             get_store().save(session.to_record())
             st.session_state.saved = True
         except StorageError as exc:
             st.error(f"Result not saved. {exc}")
+
+    previous_best = st.session_state.get("previous_best")
+    if previous_best is None:
+        st.caption("This is your first recorded attempt.")
+    elif score > previous_best:
+        st.success(f"New personal best, up from {previous_best}%.")
+    else:
+        st.caption(f"Your best remains {previous_best}%.")
 
     with st.expander("Review your answers"):
         for index, (question, given, was_correct) in enumerate(session.responses, start=1):
