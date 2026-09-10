@@ -222,7 +222,7 @@ There are three ways: each covers what others don't. **Unit tests** cover domain
 | MT-07 | Free-text | Submit with the box empty | Warning to enter an answer | Warning displayed | Passed |
 | MT-08 | Input tolerance | Enter `  8  ` with spaces | Padded input accepted, marked correct | Accepted and marked correct | Passed |
 | MT-09 | Feedback | Answer one right, one wrong | Success and failure messages, both explained | Appropriate messages displayed | Passed |
-| MT-10 | Final question | Answer the last question | Feedback and explanation shown, button reads "See results", results appear only after clicking it | Passed | 
+| MT-10 | Final question | Answer the last question | Feedback and explanation shown, button reads "See results", results appear only after clicking it | Feedback and explanation shown, button reads "See results", results appear only after clicking it | Passed |
 | MT-11 | Scoring | Get 3 of 4 right | 75.0%, band "Competent", "3 correct out of 4" | Percentage and band correct | Passed |
 | MT-12 | Weak area | Get both free-text questions wrong | Warning names the most-missed category | Category displayed correctly | Passed |
 | MT-13 | Perfect score | Answer all correctly | "Nothing to review", band "Confident" | Band reads correctly | Passed |
