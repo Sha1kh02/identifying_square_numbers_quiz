@@ -233,8 +233,8 @@ There are three ways: each covers what others don't. **Unit tests** cover domain
 | MT-18 | Export | Download the CSV and open it | Header row plus one row per attempt | Results displayed correctly | Passed |
 | MT-19 | Retake | Click "Take it again" | Returns to setup, previous attempts kept | Behaves as expected | Passed |
 | MT-20 | No double-save | Switch tabs repeatedly after finishing | Attempt count rises by exactly one | Rises by exactly one | Passed |
-| MT-21 | Best score | Take two quizzes under the same name | Best previous score shown at setup | Passed | |
-| MT-22 | Best score | Start under an unused name | No best score shown, no error | Passed | |
+| MT-21 | Best score | Take two quizzes under the same name | Best previous score shown at setup | Best previous scor shown at setup | Passed |
+| MT-22 | Best score | Start under an unused name | No best score shown, no error | No Best Score Shown, No error | Passed |
 
 ### unit testing outcome
 
